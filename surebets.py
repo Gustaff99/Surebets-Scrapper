@@ -48,6 +48,7 @@ def modificar_nombre_jugador_url2(nombre):
 def modificar_nombre_jugador_url3(nombre):
     nombres = nombre.split(",")
     if len(nombres) > 1:
+        nombres = nombre.split(" ")
         return nombres[0]
     else:
         return nombre

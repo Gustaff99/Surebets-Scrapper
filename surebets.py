@@ -1,3 +1,4 @@
+import math
 import re
 import time
 from selenium import webdriver
@@ -69,6 +70,15 @@ def calcular_surebets(resultados_url1, resultados_url2, cantidad_inicial=100):
                 print("Apostando " + str(cantidad_inicial) + " se terminaría con una ganancia de " + str(cantidad_ganancia))
                 print("Hay que apostar " + str(cantidad_apuesta_1) + " al primer participante y " + str(cantidad_apuesta_2) + " al segundo participante.")
                 bucle = False
+                if cantidad_apuesta_2.isinteger():
+                    bucle = False
+                else: 
+                    nueva_cantidad_apuesta_1 = math.floor(cantidad_apuesta_1)
+                    nueva_cantidad_apuesta_2 = (math.floor(cantidad_apuesta_1) / cantidad_apuesta_1) * cantidad_apuesta_2
+                    if cantidad_apuesta_2.isinteger():
+                        bucle = False
+                    else: cantidad_inicial = cantidad_inicial - 1
+                        
                 # Reproducir el sonido
                 sonido.play()
                 # Esperar a que el sonido termine de reproducirse

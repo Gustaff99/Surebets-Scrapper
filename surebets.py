@@ -7,12 +7,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import pygame
+import concurrent.futures
 
 # Inicializar pygame
 pygame.init()
 
-bucle = True;
-sonido = pygame.mixer.Sound("C:/Users/Gus/Desktop/Surebets/Sirena.mp3")
+bucle = True
+sonido = pygame.mixer.Sound("../Surebets-scrapper/Sirena.mp3")
+
+# Configuración de Selenium
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')
+options.add_argument('--disable-gpu')
+options.add_argument('--no-sandbox')
+options.add_argument('--log-level=3')
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
 
 # Función para modificar el nombre de los jugadores en la URL1
 def modificar_nombre_jugador_url1(nombre):
@@ -43,23 +52,33 @@ def modificar_nombre_jugador_url3(nombre):
     else:
         return nombre
 
+
+#Calcular si el numero tiene decimales
+def tiene_decimales(numero):
+    return isinstance(numero, float) or isinstance(numero, complex)
+
+
 #Funcion para comparar los resultados
-def calcular_surebets(resultados_url1, resultados_url2, cantidad_inicial=100):
+def calcular_surebets(resultados_url1, resultados_url2, cantidad_inicial=102):
     print("Comparación de resultados:")
     valorcondecimales = True
     for jugador, odds_url1 in resultados_url1.items():
         if jugador in resultados_url2:
-            while valorcondecimales:
-                odds_url2 = resultados_url2[jugador]
-                # Encontrar el valor más grande para odds1
-                max_odds1 = max(float(odds_url1[0]), float(odds_url2[0]))
-                # Encontrar el valor más grande para odds2
-                max_odds2 = max(float(odds_url1[1]), float(odds_url2[1]))
-                cantidad_apuesta_1 = (cantidad_inicial * max_odds2) / (max_odds1 + max_odds2)
-                cantidad_apuesta_2 = cantidad_inicial - cantidad_apuesta_1
+            odds_url2 = resultados_url2[jugador]
+            # Encontrar el valor más grande para odds1
+            max_odds1 = max(float(odds_url1[0]), float(odds_url2[0]))
+            # Encontrar el valor más grande para odds2
+            max_odds2 = max(float(odds_url1[1]), float(odds_url2[1]))
+            cantidad_apuesta_1 = (cantidad_inicial * max_odds2) / (max_odds1 + max_odds2)
+            cantidad_apuesta_2 = cantidad_inicial - cantidad_apuesta_1
+            cantidad_ganancia = (((cantidad_apuesta_2 * max_odds2) / 100) * cantidad_inicial) - cantidad_inicial
+            
+            if tiene_decimales(cantidad_apuesta_2):
+                cantidad_apuesta_1 = math.floor(cantidad_apuesta_1)
+                cantidad_apuesta_2 = math.floor(cantidad_apuesta_2)
+                cantidad_inicial = cantidad_apuesta_1 + cantidad_apuesta_2
                 cantidad_ganancia = (((cantidad_apuesta_2 * max_odds2) / 100) * cantidad_inicial) - cantidad_inicial
-                if cantidad_apuesta_1.is_integer(): valorcondecimales = False
-                else: cantidad_inicial = cantidad_inicial - 1
+
             if cantidad_ganancia > 0:
                 print(f"Jugador: {jugador}")
                 print("Valores de URL1:", odds_url1)
@@ -70,42 +89,26 @@ def calcular_surebets(resultados_url1, resultados_url2, cantidad_inicial=100):
                 print("Apostando " + str(cantidad_inicial) + " se terminaría con una ganancia de " + str(cantidad_ganancia))
                 print("Hay que apostar " + str(cantidad_apuesta_1) + " al primer participante y " + str(cantidad_apuesta_2) + " al segundo participante.")
                 bucle = False
-                if cantidad_apuesta_2.isinteger():
-                    bucle = False
-                else: 
-                    nueva_cantidad_apuesta_1 = math.floor(cantidad_apuesta_1)
-                    nueva_cantidad_apuesta_2 = (math.floor(cantidad_apuesta_1) / cantidad_apuesta_1) * cantidad_apuesta_2
-                    if cantidad_apuesta_2.isinteger():
-                        bucle = False
-                    else: cantidad_inicial = cantidad_inicial - 1
                         
                 # Reproducir el sonido
                 sonido.play()
                 # Esperar a que el sonido termine de reproducirse
-                pygame.time.wait(int(sonido.get_length() * 100))
+                pygame.time.wait(int(sonido.get_length() * 500))
                 # Detener todos los canales de sonido y finalizar pygame
                 pygame.mixer.stop()
                 pygame.quit()
     print("Fin de la comparación")
 
 def procesar_url1(url):
-    # Configuración de Selenium
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--log-level=3')
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
     # Crear una instancia del driver de Selenium
     driver = webdriver.Chrome(options=options)
     # Navegar a la página
     driver.get(url)
     # Desplazarse hasta el final de la página
     driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
-    time.sleep(1.25)
-    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
     # Esperar a que la página se cargue completamente
     wait = WebDriverWait(driver, 20)
+    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
     element = wait.until(EC.presence_of_element_located((By.XPATH, "//body")))
     # Esperar a que los elementos estén presentes en la página
     jugadores_odds = {}
@@ -131,23 +134,15 @@ def procesar_url1(url):
     return jugadores_odds
 
 def procesar_url2(url):
-    # Configuración de Selenium
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--log-level=3')
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
     # Crear una instancia del driver de Selenium
     driver = webdriver.Chrome(options=options)
     # Navegar a la página
     driver.get(url)
     # Desplazarse hasta el final de la página
     driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
-    time.sleep(1.25)
-    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
     # Esperar a que la página se cargue completamente
     wait = WebDriverWait(driver, 20)
+    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
     element = wait.until(EC.presence_of_element_located((By.XPATH, "//body")))
     # Esperar a que los elementos estén presentes en la página
     jugadores_odds = {}
@@ -169,23 +164,15 @@ def procesar_url2(url):
     return jugadores_odds
 
 def procesar_url3(url):
-    # Configuración de Selenium
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--log-level=3')
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
     # Crear una instancia del driver de Selenium
     driver = webdriver.Chrome(options=options)
     # Navegar a la página
     driver.get(url)
     # Desplazarse hasta el final de la página
     driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
-    time.sleep(1.25)
-    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
     # Esperar a que la página se cargue completamente
     wait = WebDriverWait(driver, 20)
+    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
     element = wait.until(EC.presence_of_element_located((By.XPATH, "//body")))
     #Carga los resultados de la pagina
     # Navegar a la página
@@ -220,7 +207,6 @@ def procesar_url3(url):
         salto = False
 
 
-
     # Cerrar el driver de Selenium
     driver.quit()
 
@@ -230,51 +216,37 @@ def imprimir_resultados(jugadores_odds, url):
     print(f'Equipos y sus dos siguientes valores de odds ({url}):')
     for jugador, odds in jugadores_odds.items():
         print(jugador, odds)
+                
 
 # URL del sitio web a analizar
-url1 = 'https://sports.williamhill.es/betting/es-es/tenis/partidos'
+url1 = 'https://sports.williamhill.es/betting/es-es/tenis'
 url2 = 'https://www.betfair.es/sport/tennis'
 url3 = 'https://www.jokerbet.es/apuestas-deportivas.html#/alltopevents/events/68'
 
 
+
 while bucle:
+    
+    # Crear un ThreadPoolExecutor con un máximo de 3 hilos
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        # Ejecutar las funciones de procesamiento de URL en paralelo
+        futuros = [executor.submit(procesar_url1, url1), executor.submit(procesar_url2, url2), executor.submit(procesar_url3, url3)]
+    
+     # Obtener los resultados de los procesos de escaneo
     try:
-        # Procesar URL1
-        resultados_url1 = procesar_url1(url1)
-        imprimir_resultados(resultados_url1, url1)
-    except Exception as e:
-        print("Fallo al obtener datos de williamhill, no se detectan apuestas en este momento")
-
-    try:
-        # Procesar URL2
-        resultados_url2 = procesar_url2(url2)
-        imprimir_resultados(resultados_url2, url2)
-    except Exception as e:
-        print("Fallo al obtener datos de betfair, no se detectan apuestas en este momento")
+        resultados_url1 = futuros[0].result()
+        resultados_url2 = futuros[1].result()
+        resultados_url3 = futuros[2].result()
         
-    try:
-        # Procesar URL3
-        resultados_url3 = procesar_url3(url3)
+        # Imprimir los resultados y realizar el cálculo de surebets
+        imprimir_resultados(resultados_url1, url1)
+        imprimir_resultados(resultados_url2, url2)
         imprimir_resultados(resultados_url3, url3)
-    except Exception as e:
-        print("Fallo al obtener datos de jockerbets, no se detectan apuestas en este momento")
-
-
-    try:
-        # Procesar surebets
-        print(url1)
-        print("y")
-        print(url2)
-        calcular_surebets(resultados_url1,resultados_url2,100)
-        print(url1)
-        print("y")
-        print(url3)
-        calcular_surebets(resultados_url1,resultados_url3,100)
-        print(url2)
-        print("y")
-        print(url3)
-        calcular_surebets(resultados_url2,resultados_url3,100)
+        
+        calcular_surebets(resultados_url1, resultados_url2, 100)
+        calcular_surebets(resultados_url1, resultados_url3, 100)
+        calcular_surebets(resultados_url2, resultados_url3, 100)
 
     except Exception as e:
-        print("Fallo al calcular surebets.")
+        print("Fallo al obtener los resultados de las URL.")
     

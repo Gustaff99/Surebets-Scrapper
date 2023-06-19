@@ -13,7 +13,7 @@ import concurrent.futures
 pygame.init()
 
 bucle = True
-sonido = pygame.mixer.Sound("../Surebets-scrapper/Sirena.mp3")
+sonido = pygame.mixer.Sound(r"c:\Users\Gus\Desktop\Surebets-scrapper\Sirena.mp3")
 
 # Configuración de Selenium
 options = webdriver.ChromeOptions()
@@ -74,13 +74,19 @@ def calcular_surebets(resultados_url1, resultados_url2, cantidad_inicial=102):
             cantidad_apuesta_2 = cantidad_inicial - cantidad_apuesta_1
             cantidad_ganancia = (((cantidad_apuesta_2 * max_odds2) / 100) * cantidad_inicial) - cantidad_inicial
             
-            if tiene_decimales(cantidad_apuesta_2):
-                cantidad_apuesta_1 = math.floor(cantidad_apuesta_1)
-                cantidad_apuesta_2 = math.floor(cantidad_apuesta_2)
-                cantidad_inicial = cantidad_apuesta_1 + cantidad_apuesta_2
-                cantidad_ganancia = (((cantidad_apuesta_2 * max_odds2) / 100) * cantidad_inicial) - cantidad_inicial
+            if tiene_decimales(cantidad_apuesta_1) or tiene_decimales(cantidad_apuesta_2):
+                if abs(math.floor(cantidad_apuesta_1) - cantidad_apuesta_1) < abs((math.floor(cantidad_apuesta_1) + 1) - cantidad_apuesta_1):
+                    cantidad_apuesta_1 = math.floor(cantidad_apuesta_1)
+                    cantidad_apuesta_2 = math.floor(cantidad_apuesta_2) + 1
+                    cantidad_inicial = cantidad_apuesta_1 + cantidad_apuesta_2
+                    cantidad_ganancia = (((cantidad_apuesta_2 * max_odds2) / 100) * cantidad_inicial) - cantidad_inicial
+                else:
+                    cantidad_apuesta_1 = math.floor(cantidad_apuesta_1) + 1
+                    cantidad_apuesta_2 = math.floor(cantidad_apuesta_2)
+                    cantidad_inicial = cantidad_apuesta_1 + cantidad_apuesta_2
+                    cantidad_ganancia = (((cantidad_apuesta_2 * max_odds2) / 100) * cantidad_inicial) - cantidad_inicial
 
-            if cantidad_ganancia > 0:
+            if cantidad_ganancia > 1:
                 print(f"Jugador: {jugador}")
                 print("Valores de URL1:", odds_url1)
                 print("Valores de URL2:", odds_url2)

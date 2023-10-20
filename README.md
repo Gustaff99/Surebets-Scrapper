@@ -68,7 +68,7 @@ This project is for educational and entertainment purposes only. Gambling can be
 
 ## Descripción General
 
-`Surebets-Scrapper` es una herramienta de rastreo web diseñada para identificar oportunidades de surebets (apuestas seguras) en diversos sitios web de apuestas, alertando al usuario mediante una señal sonora. A pesar de los desafíos que implica aprovechar estas oportunidades debido a la rápida fluctuación de las cuotas, este proyecto resulta fascinante y potencialmente útil para ciertos usuarios.
+`Surebets-Scrapper` es una herramienta de rastreo web diseñada para identificar oportunidades de surebets (apuestas seguras) en diversos sitios web de apuestas, alertando al usuario mediante una señal sonora. A pesar de los desafíos que implica aprovechar estas oportunidades debido a la rápida fluctuación de las cuotas, este proyecto puede resultar entretenido y útil para ciertos usuarios.
 
 Este proyecto está completamente desarrollado en Python, utilizando Selenium para el rastreo web.
 
@@ -96,7 +96,7 @@ pip install selenium pygame
 
 ## Cómo Funciona
 
-El script utiliza Selenium para navegar a través de varios sitios web de apuestas, extrae las cuotas de apuestas y busca identificar oportunidades de arbitraje (surebets). Cuando se encuentra una surebet, el programa alerta al usuario reproduciendo un sonido.
+El script utiliza Selenium para navegar a través de varios sitios web de apuestas, extrae las cuotas de apuestas y busca identificar oportunidades de arbitraje (surebets). Cuando se encuentra una surebet, el programa alerta al usuario reproduciendo un sonido épico.
 
 Aquí tienes un resumen de las funciones principales:
 
